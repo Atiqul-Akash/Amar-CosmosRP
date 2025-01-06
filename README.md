@@ -1,4 +1,6 @@
 AI Chatbot using CosmosRP
+
+
 This project is an AI-powered chatbot built using the CosmosRP. The bot can load custom user identities and conversation histories, providing personalized interactions. It allows users to define their own bot persona through JSON files and even continue previous conversations. With built-in features for customization and session management, this project is ideal for building intelligent, user-friendly chatbots that can learn and adapt over time.
 
 Features:
