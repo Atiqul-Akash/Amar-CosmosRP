@@ -15,6 +15,8 @@ Modular Structure: Code is organized into different modules for easier maintenan
 How to Use:
 
 Clone the repository and navigate to the project directory.
+Get your own API key which you can get for free from Pawan.Krd's discord server.
+Add the API key to the main.py code (line 31).
 Customize the bot by adding identity and history data in the customization folder.
 Run the bot with python main.py to start chatting.
 
