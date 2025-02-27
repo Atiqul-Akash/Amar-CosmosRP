@@ -25,9 +25,10 @@ if not os.path.exists('customization'):
                    "3. If these files are populated, they will override the default identity and conversation history.")
 
 # API setup
-url = "https://api.pawan.krd/cosmosrp/v1/chat/completions"
+url = "https://api.pawan.krd/cosmosrp-it/v1/chat/completions"
 headers = {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    "authorization": f"ENTER YOUR COSMOSRP KEY HERE"
 }
 
 # Load bot identity from a file
@@ -86,6 +87,8 @@ def default_identity(bot_name, user_name):
 
 # Check customization folder and load custom identity/history if available
 def load_custom_identity_history():
+    custom_identity_data, custom_history_data = None, []
+    
     if os.path.exists('customization/custom_identity.json') and os.path.exists('customization/custom_history.json'):
         try:
             # Load custom identity
@@ -95,13 +98,15 @@ def load_custom_identity_history():
             # Load custom chat history
             with open('customization/custom_history.json', 'r') as history_file:
                 custom_history_data = json.load(history_file)
+                if not isinstance(custom_history_data, list):
+                    custom_history_data = []  # Ensure it is a list if file is empty or invalid
 
             print("Custom identity and chat history loaded from 'customization' folder.")
-            return custom_identity_data, custom_history_data
         except json.JSONDecodeError:
             print("Error: Could not decode JSON in customization files.")
-            return None, None
-    return None, None
+            custom_identity_data, custom_history_data = None, []
+    
+    return custom_identity_data, custom_history_data
 
 # Create or load the bot identity
 def create_or_load_identity(user_name, bot_name):
@@ -120,7 +125,7 @@ def create_or_load_identity(user_name, bot_name):
     else:
         return default_identity(bot_name, user_name)
 
-# Start a new session
+# Initialize a new session
 def start_new_session():
     current_date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     chat_history_file = f"data/{current_date}_chat_history.json"
@@ -139,8 +144,11 @@ def start_new_session():
     # Save identity file
     save_identity(identity_file, identity_content)
 
-    # Initialize new session
-    messages = [load_custom_identity_history()[1]] or [{
+    # Load custom identity and chat history
+    _, custom_history = load_custom_identity_history()
+
+    # Initialize new session with custom or default history
+    messages = custom_history or [{
         "role": "system",
         "content": identity_content,
         "timestamp": get_timestamp()
@@ -149,6 +157,7 @@ def start_new_session():
     save_chat_history(chat_history_file, messages)
 
     return chat_history_file, identity_file, bot_name
+
 
 # Continue an old session
 def continue_session():
@@ -197,8 +206,8 @@ while True:
 
         # Add user's message to the conversation history with a timestamp
         messages.append({
-            "role": "user", 
-            "content": reply, 
+            "role": "user",  # Correct role for the user
+            "content": reply,
             "timestamp": get_timestamp()
         })
 
@@ -210,6 +219,9 @@ while True:
             "model": "cosmosrp",
             "messages": [{"role": msg["role"], "content": msg["content"]} for msg in recent_messages]
         }
+
+        # Debug: print the payload being sent to the API
+        print("Sending data to API:", json.dumps(data, indent=2))
 
         # Send the request to the API
         response = requests.post(url, headers=headers, json=data)
